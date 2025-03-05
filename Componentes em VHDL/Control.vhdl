@@ -15,7 +15,7 @@ entity Control is
         reg_dest, jump, branch, mem_read, mem_to_reg, mem_write, alu_src, reg_write: out std_logic;
         alu_op: out std_logic_vector (1 downto 0)
     );
-end control;
+end Control;
 
 architecture behavioral of Control is
 begin
