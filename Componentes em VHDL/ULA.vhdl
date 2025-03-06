@@ -1,28 +1,44 @@
-library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.NUMERIC_STD.ALL;
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 entity ULA is
-    Port (
-        A, B : in STD_LOGIC_VECTOR (7 downto 0);
-        OP : in STD_LOGIC_VECTOR (2 downto 0);
-        Result : out STD_LOGIC_VECTOR (7 downto 0)
-    );
+	port (
+		A, B: in std_logic_vector (7 downto 0);
+		ULAop: in std_logic_vector (3 downto 0);
+		Result: out std_logic_vector (7 downto 0);
+		Zero: out std_logic
+	);
 end ULA;
 
-architecture Comportamento of ULA is
+architecture comportamento of ULA is
+	signal Result_interno: std_logic_vector (7 downto 0); -- Sinal interno de 8 bits
+
 begin
-    process (A, B, OP)
-    begin
-        case OP is
-            when "000" => Result <= std_logic_vector(unsigned(A) + unsigned(B)); -- Soma
-            when "001" => Result <= std_logic_vector(unsigned(A) - unsigned(B)); -- Subtração
-            when "010" => Result <= A and B; -- AND
-            when "011" => Result <= A or B; -- OR
-            when "100" => Result <= A xor B; -- XOR
-            when "101" => Result <= std_logic_vector(shift_left(unsigned(A), to_integer(unsigned(B(2 downto 0))))); -- Shift Left
-            when "110" => Result <= std_logic_vector(shift_right(unsigned(A), to_integer(unsigned(B(2 downto 0))))); -- Shift Right
-            when others => Result <= (others => '0'); -- Default: Zera a saída
-        end case;
-    end process;
-end Comportamento;
+	process (A, B, ULAop)
+	begin
+		case ULAop is
+			when "0000" => Result_interno <= A and B; -- AND de 8 bits
+			when "0001" => Result_interno <= A or B;  -- OR de bits
+			when "0010" => Result_interno <= std_logic_vector(unsigned(A) + unsigned(B)); -- Soma de 8 bits
+			when "0110" => Result_interno <= std_logic_vector(unsigned(A) - unsigned(B)); -- Subtração de 8 bits
+			when "0111" => 
+				if unsigned(A) < unsigned(B) then 
+					Result_interno <= "00000001"; -- SLT de 8 bits
+				else
+					Result_interno <= "00000000";
+				end if;
+			when "1100" => Result_interno <= not (A or B); -- NOR de 8 bits
+			when others => Result_interno <= (others => '0'); -- Todos os bits em 0
+		end case;
+		
+		-- Define sinal Zero
+		if Result_interno = "00000000" then
+			Zero <= '1'; -- Se result zero, ativa o sinal zero
+		else
+			Zero <= '0'; -- Caso contrário, desativa o sinal zero
+		end if;
+	end process;
+	
+	Result <= Result_interno; -- Atribui o resultado interno a saída
+end comportamento;
